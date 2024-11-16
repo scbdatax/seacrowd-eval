@@ -1,0 +1,121 @@
+{
+    "xl_sum_tha_seacrowd_t2t": [
+        "xl_sum_tha_seacrowd_t2t",
+        "SUM",
+        {
+            "repo": "kunato/thaillm-leaderboard-dataset",
+            "subset": [
+                "train",
+                "test",
+                "validation"
+            ],
+            "use_file": true
+        }
+    ],
+    "flores200_eng_Latn_tha_Thai_seacrowd_t2t": [
+        "flores200_eng_Latn_tha_Thai_seacrowd_t2t",
+        "MT",
+        {
+            "repo": "kunato/thaillm-leaderboard-dataset",
+            "subset": [
+                "dev",
+                "devtest"
+            ],
+            "use_file": true
+        }
+    ],
+    "flores200_tha_Thai_eng_Latn_seacrowd_t2t": [
+        "flores200_tha_Thai_eng_Latn_seacrowd_t2t",
+        "MT",
+        {
+            "repo": "kunato/thaillm-leaderboard-dataset",
+            "subset": [
+                "dev",
+                "devtest"
+            ],
+            "use_file": true
+        }
+    ],
+    "iapp_squad_seacrowd_qa": [
+        "iapp_squad_seacrowd_qa",
+        "QA",
+        {
+            "repo": "kunato/thaillm-leaderboard-dataset",
+            "subset": [
+                "train",
+                "test",
+                "validation"
+            ],
+            "use_file": true
+        }
+    ],
+    "wisesight_thai_sentiment_seacrowd_text": [
+        "wisesight_thai_sentiment_seacrowd_text",
+        "SA",
+        {
+            "repo": "kunato/thaillm-leaderboard-dataset",
+            "subset": [
+                "train",
+                "test",
+                "validation"
+            ],
+            "use_file": true
+        }
+    ],
+    "m3exam_tha_seacrowd_qa": [
+        "m3exam_tha_seacrowd_qa",
+        "QA",
+        {
+            "repo": "kunato/thaillm-leaderboard-dataset",
+            "subset": [
+                "test",
+                "validation"
+            ],
+            "use_file": true
+        }
+    ],
+    "xcopa_tha_seacrowd_qa": [
+        "xcopa_tha_seacrowd_qa",
+        "CR",
+        {
+            "repo": "kunato/thaillm-leaderboard-dataset",
+            "subset": [
+                "test",
+                "validation"
+            ],
+            "use_file": true
+        }
+    ],
+    "belebele_tha_thai_seacrowd_qa": [
+        "belebele_tha_thai_seacrowd_qa",
+        "QA",
+        {
+            "repo": "kunato/thaillm-leaderboard-dataset",
+            "subset": [
+                "test"
+            ],
+            "use_file": true
+        }
+    ],
+    "xnli.tha_seacrowd_pairs": [
+        "xnli.tha_seacrowd_pairs",
+        "TE",
+        {
+            "repo": "kunato/thaillm-leaderboard-dataset",
+            "subset": [
+                "train",
+                "test",
+                "validation"
+            ],
+            "use_file": true
+        }
+    ],
+    "thaiexam_qa": [
+        "thaiexam_qa",
+        "QA",
+        {
+            "repo": "kunato/thai-exam-seacrowd",
+            "use_file": false
+        }
+    ]
+}
