@@ -16,6 +16,7 @@ import torch
 import torch.nn.functional as F
 import logging
 from tqdm import tqdm
+import re
 
 try:
     import google.generativeai as genai
@@ -281,6 +282,8 @@ class APIModel(AbsModel):
     def predict_classification(
         self, prompts: List[str], labels: List[str], **kwargs
     ):  # return List[len(prompts)] with int value as idx of each
+        is_thinking = kwargs.get("is_thinking", False)
+
         inputs = [
             [
                 {
@@ -302,6 +305,11 @@ class APIModel(AbsModel):
             selected_idx = -1
             response_lower = response.strip().lower()
 
+            if is_thinking:
+                response_lower = re.sub(
+                    r"<think>.*<\/think>", "", response_lower
+                ).strip()
+
             for i, label_name in enumerate(labels):
                 label_lower = label_name.strip().lower()
                 if response_lower == label_lower or response_lower.startswith(
@@ -316,6 +324,8 @@ class APIModel(AbsModel):
     def predict_generation(
         self, prompts: List[Union[str, ChatMessage]], **kwargs
     ) -> List[str]:
+        is_thinking = kwargs.get("is_thinking", False)
+
         if isinstance(prompts[0], str):
             prompts = [
                 [
@@ -330,6 +340,14 @@ class APIModel(AbsModel):
             max_workers=self.batch_size
         ) as executor:
             results = list(tqdm(executor.map(_fn, prompts), total=len(prompts)))
+
+        if is_thinking:
+            new_results = []
+            for response in results:
+                response = re.sub(r"<think>.*<\/think>", "", response).strip()
+                new_results.append(response)
+            return new_results
+
         return results
 
 

@@ -61,9 +61,9 @@ if __name__ == "__main__":
         raise ValueError(
             "main_nlg_prompt.py <prompt_lang> <model_path_or_name> <n_shot> <batch_size>"
         )
-    if len(sys.argv) > 7:
+    if len(sys.argv) > 8:
         raise ValueError(
-            "main_nlg_prompt.py <prompt_lang> <model_path_or_name> <n_shot> <batch_size> <base_url> <api_key>"
+            "main_nlg_prompt.py <prompt_lang> <model_path_or_name> <n_shot> <batch_size> <base_url> <api_key>  <is_thinking>"
         )
 
     out_dir = "./outputs_nlg"
@@ -84,6 +84,11 @@ if __name__ == "__main__":
         BASE_URL = sys.argv[5]
         API_KEY = sys.argv[6]
         OPENAI_COMPATIBLE = True
+    if len(sys.argv) == 8:
+        BASE_URL = sys.argv[5]
+        API_KEY = sys.argv[6]
+        OPENAI_COMPATIBLE = True
+        IS_THINKING = sys.argv[7] == "true"
 
     # Load prompt
     prompt_templates = get_prompt(prompt_lang, return_only_one=True)
@@ -213,6 +218,7 @@ if __name__ == "__main__":
                         if len(prompts) == BATCH_SIZE:
                             batch_preds = model_runner.predict_generation(
                                 prompts,
+                                is_thinking=IS_THINKING,
                             )
                             for prompt_text, pred, gold in zip(
                                 prompts, batch_preds, batch_golds
@@ -242,6 +248,7 @@ if __name__ == "__main__":
                     if len(prompts) > 0:
                         batch_preds = model_runner.predict_generation(
                             prompts,
+                            is_thinking=IS_THINKING,
                         )
                         for prompt_text, pred, gold in zip(
                             prompts, batch_preds, batch_golds

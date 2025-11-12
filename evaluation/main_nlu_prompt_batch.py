@@ -60,9 +60,9 @@ if __name__ == "__main__":
         raise ValueError(
             "main_nlu_prompt.py <prompt_lang> <model_path_or_name> <batch_size>"
         )
-    if len(sys.argv) > 6:
+    if len(sys.argv) > 7:
         raise ValueError(
-            "main_nlu_prompt.py <prompt_lang> <model_path_or_name> <batch_size> <base_url> <api_key>"
+            "main_nlu_prompt.py <prompt_lang> <model_path_or_name> <batch_size> <base_url> <api_key> <is_thinking>"
         )
 
     prompt_lang = sys.argv[1]
@@ -71,10 +71,16 @@ if __name__ == "__main__":
     BASE_URL = None
     API_KEY = None
     OPENAI_COMPATIBLE = False
+
     if len(sys.argv) == 6:
         BASE_URL = sys.argv[4]
         API_KEY = sys.argv[5]
         OPENAI_COMPATIBLE = True
+    if len(sys.argv) == 7:
+        BASE_URL = sys.argv[4]
+        API_KEY = sys.argv[5]
+        OPENAI_COMPATIBLE = True
+        IS_THINKING = sys.argv[6] == "true"
 
     out_dir = "./outputs_nlu"
     metric_dir = "./metrics_nlu"
@@ -211,8 +217,7 @@ if __name__ == "__main__":
                         # Batch Inference
                         if len(prompts) == BATCH_SIZE:
                             hyps = model_runner.predict_classification(
-                                prompts,
-                                label_names,
+                                prompts, label_names, is_thinking=IS_THINKING
                             )
                             for prompt_text, hyp, label in zip(prompts, hyps, labels):
                                 inputs.append(prompt_text)
@@ -223,8 +228,7 @@ if __name__ == "__main__":
 
                     if len(prompts) > 0:
                         hyps = model_runner.predict_classification(
-                            prompts,
-                            label_names,
+                            prompts, label_names, is_thinking=IS_THINKING
                         )
                         for prompt_text, hyp, label in zip(prompts, hyps, labels):
                             inputs.append(prompt_text)
