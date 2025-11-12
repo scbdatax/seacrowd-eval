@@ -3,7 +3,9 @@ from huggingface_hub import HfApi, snapshot_download
 from utils import read_all_pending_model
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 def main():
     api = HfApi()
@@ -27,8 +29,8 @@ def main():
             model_name = info["model"]
             if status == "PENDING":
                 to_run.append(model_name)
-                info['status'] = 'RUNNING'
-                with open(filepath, 'w') as w:
+                info["status"] = "RUNNING"
+                with open(filepath, "w") as w:
                     json.dump(info, w, ensure_ascii=False)
             # TODO / turn-on-this: Update status
             #     api.upload_file(
@@ -38,11 +40,11 @@ def main():
             #         repo_type="dataset",
             #         commit_message=f"Update {model_name} to eval queue",
             #     )
-    
+
     to_run = list(set(to_run))
     with open(f"{outpath}/run.sh", "w") as w:
         for model_name in to_run:
-            print('adding ...', model_name)
+            print("adding ...", model_name)
             w.write(f"MODEL_NAME={model_name} sh runner.sh\n")
 
 

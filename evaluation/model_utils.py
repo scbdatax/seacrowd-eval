@@ -249,7 +249,7 @@ def _parallel_generate(args):
 
 class APIModel(AbsModel):
 
-    def __init__(self, model_name, base_url=None, api_key=None, batch_size:int = 4):
+    def __init__(self, model_name, base_url=None, api_key=None, batch_size: int = 4):
         self.model_name = model_name
         self.generate_fn = None
         self.base_url = base_url
@@ -293,16 +293,17 @@ class APIModel(AbsModel):
         ]
         hyps = []
         _fn = partial(self.generate_fn, model_name=self.model_name)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.batch_size) as executor:
-            results = list(
-                tqdm(executor.map(_fn, inputs), total=len(prompts))
-            )
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.batch_size
+        ) as executor:
+            results = list(tqdm(executor.map(_fn, inputs), total=len(prompts)))
 
         for response, _prompt in zip(results, prompts):
             selected_idx = -1
+            response_lower = response.strip().lower()
+
             for i, label_name in enumerate(labels):
                 label_lower = label_name.strip().lower()
-                response_lower = response.strip().lower()
                 if response_lower == label_lower or response_lower.startswith(
                     label_lower
                 ):
@@ -325,10 +326,10 @@ class APIModel(AbsModel):
         else:
             prompts = [[dataclasses.asdict(p) for p in conv] for conv in prompts]
         _fn = partial(self.generate_fn, model_name=self.model_name)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.batch_size) as executor:
-            results = list(
-                tqdm(executor.map(_fn, prompts), total=len(prompts))
-            )
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.batch_size
+        ) as executor:
+            results = list(tqdm(executor.map(_fn, prompts), total=len(prompts)))
         return results
 
 
@@ -414,9 +415,7 @@ class HFModel(AbsModel):
         return terminators
 
     @torch.inference_mode()
-    def predict_generation(
-        self, prompts: List[Union[str, ChatMessage]], **kwargs
-    ):
+    def predict_generation(self, prompts: List[Union[str, ChatMessage]], **kwargs):
         if isinstance(prompts[0], str):
             prompts = [
                 self.tokenizer.apply_chat_template(
@@ -465,7 +464,12 @@ class HFModel(AbsModel):
 
 
 def load_model_runner(
-    model_name: str, fast=False, openai_compatible=False, base_url=None, api_key=None, batch_size=4
+    model_name: str,
+    fast=False,
+    openai_compatible=False,
+    base_url=None,
+    api_key=None,
+    batch_size=4,
 ):
     if model_name in [
         "gpt-4o-mini-2024-07-18",
@@ -483,7 +487,9 @@ def load_model_runner(
         print(
             f"Using OpenAI API compatible with model {model_name}, base_url: {base_url}, api_key: {api_key}"
         )
-        model_runner = APIModel(model_name, base_url=base_url, api_key=api_key, batch_size=batch_size)
+        model_runner = APIModel(
+            model_name, base_url=base_url, api_key=api_key, batch_size=batch_size
+        )
     else:
         model_runner = HFModel(model_name, compile=fast)
     return model_runner

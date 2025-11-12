@@ -7,7 +7,8 @@ import nltk
 from datasets import DatasetDict, load_dataset
 
 print("nltk data path:", nltk.data.path)
-nltk.download('punkt_tab')
+nltk.download("punkt_tab")
+
 
 class Tasks(Enum):
     # Knowledge Base
@@ -24,7 +25,7 @@ class Tasks(Enum):
     # Single Text Classification (single-label)
     ABUSIVE_LANGUAGE_PREDICTION = "ABL"
     COMPLAINT_DETECTION = "CD"
-    DOMAIN_KNOWLEDGE_CLASSIFICATION = "DKC" # classification for non NLP-oriented label
+    DOMAIN_KNOWLEDGE_CLASSIFICATION = "DKC"  # classification for non NLP-oriented label
     EMOTION_CLASSIFICATION = "EC"
     LANGUAGE_IDENTIFICATION = "LI"
     HOAX_NEWS_CLASSIFICATION = "HNC"
@@ -40,7 +41,9 @@ class Tasks(Enum):
 
     # Single Text Classification (multi-label)
     ASPECT_BASED_SENTIMENT_ANALYSIS = "ABSA"
-    DOMAIN_KNOWLEDGE_MULTICLASSIFICATION = "DKM" # multi-classification for non NLP-oriented label
+    DOMAIN_KNOWLEDGE_MULTICLASSIFICATION = (
+        "DKM"  # multi-classification for non NLP-oriented label
+    )
     CODE_SWITCHING_IDENTIFICATION = "CSI"
 
     # Single Text Sequence Labeling
@@ -115,11 +118,16 @@ class Tasks(Enum):
     FACT_CHECKING = "FCT"
     WORD_LIST = "WL"
 
+
 def patch_resolve_trust_remote_code():
     def resolve_trust_remote_code(trust_remote_code: bool | None, repo_id: str):
-        print('Patch `trust_remote_code` to enable fully auto-run. Beware of the risk of code injection in the dataset.')
+        print(
+            "Patch `trust_remote_code` to enable fully auto-run. Beware of the risk of code injection in the dataset."
+        )
         return True
+
     datasets.load.resolve_trust_remote_code = resolve_trust_remote_code
+
 
 patch_resolve_trust_remote_code()
 
@@ -130,7 +138,7 @@ NLU_TASK_LIST = [
     "xcopa_tha_seacrowd_qa",
     "belebele_tha_thai_seacrowd_qa",
     "xnli.tha_seacrowd_pairs",
-    'thaiexam_qa'
+    "thaiexam_qa",
 ]
 
 
@@ -141,6 +149,7 @@ NLG_TASK_LIST = [
     "iapp_squad_seacrowd_qa",
 ]
 
+
 def _get_task_from_value(value: str):
     for task_cls in Tasks:
         if task_cls.value == value:
@@ -149,26 +158,28 @@ def _get_task_from_value(value: str):
 
 
 def create_dataset_config(row):
-    dataset_name, task_value, dataset_config  = row
+    dataset_name, task_value, dataset_config = row
     task_cls = _get_task_from_value(task_value)
-    if dataset_config['use_file']:
+    if dataset_config["use_file"]:
         ds = DatasetDict()
-        for s in dataset_config['subset']:
-            d = load_dataset(dataset_config['repo'], data_files=f'{dataset_name}_{s}.jsonl')['train']
+        for s in dataset_config["subset"]:
+            d = load_dataset(
+                dataset_config["repo"], data_files=f"{dataset_name}_{s}.jsonl"
+            )["train"]
             ds[s] = d
     else:
-        ds = load_dataset(dataset_config['repo'])
+        ds = load_dataset(dataset_config["repo"])
     return (ds, task_cls)
+
 
 def dataset_from_config():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     results = {}
-    with open(f'{current_dir}/config/dataset_config.json') as f:
+    with open(f"{current_dir}/config/dataset_config.json") as f:
         dataset_config = json.load(f)
         for config_name in dataset_config.keys():
             results[config_name] = create_dataset_config(dataset_config[config_name])
     return results
-    
 
 
 def load_nlu_datasets():

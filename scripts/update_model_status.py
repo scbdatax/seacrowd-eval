@@ -4,6 +4,7 @@ from typing import List
 from huggingface_hub import HfApi, snapshot_download
 from utils import read_model_for_name
 
+
 def main(model_names: List[str], status: str):
     api = HfApi()
     CACHE_PATH = os.getenv("HF_HOME", ".")
@@ -16,15 +17,15 @@ def main(model_names: List[str], status: str):
         tqdm_class=None,
         etag_timeout=30,
     )
-    assert status in ['FINISHED', 'FAILED', 'PENDING']
+    assert status in ["FINISHED", "FAILED", "PENDING"]
     EVAL_REQUESTS_PATH = os.path.join(CACHE_PATH, "eval-queue")
     for full_model_name in model_names:
         all_models_with_names = read_model_for_name(full_model_name, EVAL_REQUESTS_PATH)
         for v, p in all_models_with_names:
-            v['status'] = status
-            with open(p, 'w') as w:
+            v["status"] = status
+            with open(p, "w") as w:
                 json.dump(v, w, ensure_ascii=False)
-            print(f'uploading: {p}')
+            print(f"uploading: {p}")
             api.upload_file(
                 path_or_fileobj=p,
                 path_in_repo=p.split("eval-queue/")[1],
@@ -33,5 +34,6 @@ def main(model_names: List[str], status: str):
                 commit_message=f"Update {p} to eval queue",
             )
 
-if __name__ == '__main__':
-    main(['...'], status='PENDING')
+
+if __name__ == "__main__":
+    main(["..."], status="PENDING")

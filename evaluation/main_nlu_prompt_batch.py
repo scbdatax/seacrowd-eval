@@ -211,7 +211,8 @@ if __name__ == "__main__":
                         # Batch Inference
                         if len(prompts) == BATCH_SIZE:
                             hyps = model_runner.predict_classification(
-                                prompts, label_names,
+                                prompts,
+                                label_names,
                             )
                             for prompt_text, hyp, label in zip(prompts, hyps, labels):
                                 inputs.append(prompt_text)
@@ -222,7 +223,8 @@ if __name__ == "__main__":
 
                     if len(prompts) > 0:
                         hyps = model_runner.predict_classification(
-                            prompts, label_names,
+                            prompts,
+                            label_names,
                         )
                         for prompt_text, hyp, label in zip(prompts, hyps, labels):
                             inputs.append(prompt_text)

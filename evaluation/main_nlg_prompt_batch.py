@@ -79,7 +79,7 @@ if __name__ == "__main__":
     BASE_URL = None
     API_KEY = None
     OPENAI_COMPATIBLE = False
-    
+
     if len(sys.argv) == 7:
         BASE_URL = sys.argv[5]
         API_KEY = sys.argv[6]

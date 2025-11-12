@@ -4,3 +4,6 @@ build_and_push.sh
 output*/
 metrics*/
 run.sh
+
+venv/
+.DS_Store
