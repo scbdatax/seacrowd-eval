@@ -45,8 +45,11 @@ class LLMJudgeEvalHandler:
     ) -> None:
         self.data_path = data_path
         self.judge_num_workers = judge_num_workers
-        self.judge_model = "gpt-4o-2024-05-13"
-        self.openai_client = OpenAI()
+        self.judge_model = os.getenv("JUDGE_MODEL", "gpt-4o-2024-05-13")
+        self.openai_client = OpenAI(
+            base_url=os.getenv("JUDGE_BASE_URL", "https://api.openai.com/v1"),
+            api_key=os.getenv("JUDGE_API_KEY", "your-openai-api-key"),
+        )
         self.judge_prompts = self._load_judge_prompts()
         self.model_runner = load_model_runner(model_name, fast=True)
         if model_base_url is not None and model_base_api is not None:
@@ -84,18 +87,27 @@ class LLMJudgeEvalHandler:
 
     def load_dataset(self) -> List[LLMJudgePayload]:
         res = []
-        if os.path.exists(self.data_path):
-            with open(self.data_path) as f:
-                data = json.load(f)
-        else:
-            data = []
-            ds = load_dataset(self.data_path, split="train")
-            column_names = ds.column_names
-            for i in range(len(ds[column_names[0]])):
-                row = {}
-                for key in column_names:
-                    row[key] = ds[key][i]
-                data.append(row)
+        # if os.path.exists(self.data_path):
+        #     with open(self.data_path) as f:
+        #         data = json.load(f)
+        # else:
+        #     data = []
+        #     ds = load_dataset(self.data_path, split="train")
+        #     column_names = ds.column_names
+        #     for i in range(len(ds[column_names[0]])):
+        #         row = {}
+        #         for key in column_names:
+        #             row[key] = ds[key][i]
+        #         data.append(row)
+
+        data = []
+        ds = load_dataset(self.data_path, split="train")
+        column_names = ds.column_names
+        for i in range(len(ds[column_names[0]])):
+            row = {}
+            for key in column_names:
+                row[key] = ds[key][i]
+            data.append(row)
 
         for row in data:
             turns = row["turns"]
@@ -181,7 +193,12 @@ class LLMJudgeEvalHandler:
             )
 
         rating = -1
-        if "gpt-4" in self.judge_model or "gpt-3.5" in self.judge_model:
+        if (
+            "gpt-4" in self.judge_model
+            or "gpt-3.5" in self.judge_model
+            or "hugging-quants/Meta-Llama-3.1-405B-Instruct-AWQ-INT4"
+            in self.judge_model
+        ):
             conv = [
                 {"role": "system", "content": prompt_template["system_prompt"]},
                 {"role": "user", "content": user_prompt},

@@ -5,6 +5,8 @@ from enum import Enum
 import datasets
 import nltk
 from datasets import DatasetDict, load_dataset
+
+print("nltk data path:", nltk.data.path)
 nltk.download('punkt_tab')
 
 class Tasks(Enum):
