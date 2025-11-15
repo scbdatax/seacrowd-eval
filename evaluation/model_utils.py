@@ -307,7 +307,7 @@ class APIModel(AbsModel):
 
             if is_thinking:
                 response_lower = re.sub(
-                    r"<think>.*<\/think>", "", response_lower
+                    r"<think>.*?</think>", "", response_lower, flags=re.DOTALL
                 ).strip()
 
             for i, label_name in enumerate(labels):
@@ -344,7 +344,9 @@ class APIModel(AbsModel):
         if is_thinking:
             new_results = []
             for response in results:
-                response = re.sub(r"<think>.*<\/think>", "", response).strip()
+                response = re.sub(
+                    r"<think>.*?</think>", "", response, flags=re.DOTALL
+                ).strip()
                 new_results.append(response)
             return new_results
 
