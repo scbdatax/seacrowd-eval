@@ -1,4 +1,5 @@
 import os, sys
+import json
 import csv
 from os.path import exists
 
@@ -144,6 +145,8 @@ if __name__ == "__main__":
             preds = []
             preds_latin = []
             golds = []
+            first_3_messages_list = []
+            input_data_list = []
             print(f"PROMPT ID: {prompt_id}")
             print(
                 f"SAMPLE PROMPT: {to_prompt(data[0], prompt_template, prompt_lang, dset_subset, task_type.value)}"
@@ -186,6 +189,8 @@ if __name__ == "__main__":
                         preds.append(row["Pred"])
                         preds_latin.append(row["Pred_Latin"])
                         golds.append(row["Gold"])
+                        first_3_messages_list.append(row.get("First3Messages", ""))
+                        input_data_list.append(row.get("InputData", ""))
                 print(f"Skipping until {len(preds)}")
 
             # If incomplete, continue
@@ -193,6 +198,7 @@ if __name__ == "__main__":
                 count = 0
                 with torch.inference_mode():
                     prompts, batch_golds = [], []
+                    samples = []
                     for e, sample in enumerate(tqdm(data)):
                         if e < len(preds):
                             continue
@@ -213,15 +219,23 @@ if __name__ == "__main__":
                             if "answer" in sample
                             else sample["text_2"]
                         )
+                        samples.append(sample)
 
                         # Batch inference
                         if len(prompts) == BATCH_SIZE:
-                            batch_preds = model_runner.predict_generation(
-                                prompts,
-                                is_thinking=IS_THINKING,
+                            batch_preds, messages_list = (
+                                model_runner.predict_generation(
+                                    prompts,
+                                    is_thinking=IS_THINKING,
+                                    return_messages=True,
+                                )
                             )
-                            for prompt_text, pred, gold in zip(
-                                prompts, batch_preds, batch_golds
+                            for prompt_text, pred, gold, messages, sample in zip(
+                                prompts,
+                                batch_preds,
+                                batch_golds,
+                                messages_list,
+                                samples,
                             ):
                                 inputs.append(prompt_text)
                                 preds.append(pred if pred is not None else "")
@@ -229,14 +243,33 @@ if __name__ == "__main__":
                                     anyascii(pred) if pred is not None else ""
                                 )
                                 golds.append(gold)
+                                first_3_messages_list.append(json.dumps(messages[:3]))
+                                input_data_list.append(json.dumps(sample))
                             prompts, batch_golds = [], []
+                            samples = []
                             count += 1
 
                         if count % SAVE_EVERY == 0:
                             # partial saving
                             inference_df = pd.DataFrame(
-                                list(zip(inputs, preds, preds_latin, golds)),
-                                columns=["Input", "Pred", "Pred_Latin", "Gold"],
+                                list(
+                                    zip(
+                                        inputs,
+                                        preds,
+                                        preds_latin,
+                                        golds,
+                                        first_3_messages_list,
+                                        input_data_list,
+                                    )
+                                ),
+                                columns=[
+                                    "Input",
+                                    "Pred",
+                                    "Pred_Latin",
+                                    "Gold",
+                                    "First3Messages",
+                                    "InputData",
+                                ],
                             )
                             inference_df.to_csv(
                                 f'{out_dir}/{dset_subset}_{prompt_lang}_{prompt_id}_{N_SHOT}_{MODEL.split("/")[-1]}.csv',
@@ -246,12 +279,13 @@ if __name__ == "__main__":
 
                     # Predict the rest inputs
                     if len(prompts) > 0:
-                        batch_preds = model_runner.predict_generation(
+                        batch_preds, messages_list = model_runner.predict_generation(
                             prompts,
                             is_thinking=IS_THINKING,
+                            return_messages=True,
                         )
-                        for prompt_text, pred, gold in zip(
-                            prompts, batch_preds, batch_golds
+                        for prompt_text, pred, gold, messages, sample in zip(
+                            prompts, batch_preds, batch_golds, messages_list, samples
                         ):
                             inputs.append(prompt_text)
                             preds.append(pred if pred is not None else "")
@@ -259,12 +293,31 @@ if __name__ == "__main__":
                                 anyascii(pred) if pred is not None else ""
                             )
                             golds.append(gold)
+                            first_3_messages_list.append(json.dumps(messages[:3]))
+                            input_data_list.append(json.dumps(sample))
                         prompts, batch_golds = [], []
+                        samples = []
 
             # Final save
             inference_df = pd.DataFrame(
-                list(zip(inputs, preds, preds_latin, golds)),
-                columns=["Input", "Pred", "Pred_Latin", "Gold"],
+                list(
+                    zip(
+                        inputs,
+                        preds,
+                        preds_latin,
+                        golds,
+                        first_3_messages_list,
+                        input_data_list,
+                    )
+                ),
+                columns=[
+                    "Input",
+                    "Pred",
+                    "Pred_Latin",
+                    "Gold",
+                    "First3Messages",
+                    "InputData",
+                ],
             )
             inference_df.to_csv(
                 f'{out_dir}/{dset_subset}_{prompt_lang}_{prompt_id}_{N_SHOT}_{MODEL.split("/")[-1]}.csv',
@@ -276,6 +329,8 @@ if __name__ == "__main__":
             preds = preds[-len(data) :]
             preds_latin = preds_latin[-len(data) :]
             golds = golds[-len(data) :]
+            first_3_messages_list = first_3_messages_list[-len(data) :]
+            input_data_list = input_data_list[-len(data) :]
 
             eval_metric = generation_metrics_fn(preds, golds)
             eval_metric_latin = generation_metrics_fn(preds_latin, golds)

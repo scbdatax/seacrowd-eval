@@ -224,7 +224,12 @@ class LLMJudgeEvalHandler:
                 f"invalid output format: {prompt_template['output_format']}"
             )
 
-        return {"rating": rating, "user_prompt": user_prompt, "judgment": judgment}
+        return {
+            "rating": rating,
+            "user_prompt": user_prompt,
+            "judgment": judgment,
+            "messages": conv,
+        }
 
     def _call_openai(self, model, conv, temperature, max_tokens):
         output = "$ERROR$"
@@ -260,7 +265,10 @@ class LLMJudgeEvalHandler:
                 "question_id": p.question_id,
                 "turn": i,
                 "category": p.category,
+                "category": p.category,
                 "payload": dataclasses.asdict(p),
+                "first_3_messages": r.get("messages", [])[:3],
+                "input_data": dataclasses.asdict(p),
             }
 
         judge_results = thread_map(

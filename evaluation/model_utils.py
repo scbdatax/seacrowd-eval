@@ -234,13 +234,13 @@ class AbsModel(abc.ABC):
         pass
 
     def predict_classification(
-        self, prompts: List[str], labels: List[str]
-    ) -> List[int]:
+        self, prompts: List[str], labels: List[str], return_messages=False
+    ) -> Union[List[int], Tuple[List[int], List[Any]]]:
         raise NotImplementedError()
 
     def predict_generation(
-        self, prompts: List[Union[str, ChatMessage]], **kwargs
-    ) -> List[str]:
+        self, prompts: List[Union[str, ChatMessage]], return_messages=False, **kwargs
+    ) -> Union[List[str], Tuple[List[str], List[Any]]]:
         raise NotImplementedError()
 
 
@@ -280,7 +280,7 @@ class APIModel(AbsModel):
         self.max_generation_length = MAX_GENERATION_LENGTH
 
     def predict_classification(
-        self, prompts: List[str], labels: List[str], **kwargs
+        self, prompts: List[str], labels: List[str], return_messages=False, **kwargs
     ):  # return List[len(prompts)] with int value as idx of each
         is_thinking = kwargs.get("is_thinking", False)
 
@@ -319,10 +319,12 @@ class APIModel(AbsModel):
                     break
             hyps.append(selected_idx)
         assert len(prompts) == len(hyps)
+        if return_messages:
+            return hyps, inputs
         return hyps
 
     def predict_generation(
-        self, prompts: List[Union[str, ChatMessage]], **kwargs
+        self, prompts: List[Union[str, ChatMessage]], return_messages=False, **kwargs
     ) -> List[str]:
         is_thinking = kwargs.get("is_thinking", False)
 
@@ -348,8 +350,12 @@ class APIModel(AbsModel):
                     r"<think>.*?</think>", "", response, flags=re.DOTALL
                 ).strip()
                 new_results.append(response)
+            if return_messages:
+                return new_results, prompts
             return new_results
 
+        if return_messages:
+            return results, prompts
         return results
 
 
@@ -411,7 +417,9 @@ class HFModel(AbsModel):
         return logprobs.sum(dim=1).cpu()
 
     @torch.inference_mode()
-    def predict_classification(self, prompts: List[str], labels: List[str], **kwargs):
+    def predict_classification(
+        self, prompts: List[str], labels: List[str], return_messages=False, **kwargs
+    ):
         probs = []
         for label in labels:
             inputs = [prompt.replace("[LABEL_CHOICE]", label) for prompt in prompts]
@@ -421,6 +429,8 @@ class HFModel(AbsModel):
                 .numpy()
             )
         result = np.argmax(np.stack(probs, axis=-1), axis=-1).tolist()
+        if return_messages:
+            return result, prompts
         return result
 
     def _get_terminator(self):
@@ -435,7 +445,9 @@ class HFModel(AbsModel):
         return terminators
 
     @torch.inference_mode()
-    def predict_generation(self, prompts: List[Union[str, ChatMessage]], **kwargs):
+    def predict_generation(
+        self, prompts: List[Union[str, ChatMessage]], return_messages=False, **kwargs
+    ):
         if isinstance(prompts[0], str):
             prompts = [
                 self.tokenizer.apply_chat_template(
@@ -480,6 +492,8 @@ class HFModel(AbsModel):
         preds = self.tokenizer.batch_decode(
             outputs[:, input_sizes:], skip_special_tokens=True
         )
+        if return_messages:
+            return preds, prompts
         return preds
 
 
