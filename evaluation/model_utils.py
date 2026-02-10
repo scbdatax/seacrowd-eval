@@ -482,10 +482,6 @@ def load_model_runner(
     elif openai_compatible:
         if openai_compatible and (base_url is None or api_key is None):
             raise ValueError("OpenAI compatible models require base_url and api_key.")
-        masked_api_key = "<provided>" if api_key is not None else "<not provided>"
-        print(
-            f"Using OpenAI API compatible with model {model_name}, base_url: {base_url}, api_key: {masked_api_key}"
-        )
         model_runner = APIModel(model_name, base_url=base_url, api_key=api_key, batch_size=batch_size)
     else:
         model_runner = HFModel(model_name, compile=fast)
