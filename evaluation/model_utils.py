@@ -201,7 +201,7 @@ def _get_and_verify_max_len(
         else:
             raise ValueError("rope_scaling must have a 'type' or 'rope_type' key.")
 
-        if rope_type not in ("su", "longrope", "llama3"):
+        if rope_type not in ("su", "longrope", "llama3", "default"):
             if disable_sliding_window:
                 raise NotImplementedError(
                     "Disabling sliding window is not supported for models "
@@ -209,11 +209,13 @@ def _get_and_verify_max_len(
                     "investigate."
                 )
 
-            assert "factor" in rope_scaling
-            scaling_factor = rope_scaling["factor"]
-            if rope_type == "yarn":
-                derived_max_model_len = rope_scaling["original_max_position_embeddings"]
-            derived_max_model_len *= scaling_factor
+            if "factor" not in rope_scaling:
+                pass  # No scaling factor specified, skip scaling
+            else:
+                scaling_factor = rope_scaling["factor"]
+                if rope_type == "yarn":
+                    derived_max_model_len = rope_scaling["original_max_position_embeddings"]
+                derived_max_model_len *= scaling_factor
 
     if max_model_len is None:
         max_model_len = int(derived_max_model_len)
@@ -409,7 +411,7 @@ class HFModel(AbsModel):
         ]
         for t in eos_tokens:
             tok = self.tokenizer.convert_tokens_to_ids(t)
-            if isinstance(tok, int):
+            if isinstance(tok, int) and tok != self.tokenizer.unk_token_id:
                 terminators.append(tok)
         return terminators
 
